@@ -195,7 +195,9 @@ windower.register_event('addon command', function(...)
 
     if (cmd == nil or cmd == '') then
         running = not running
+        message((running and "Starting" or "Stopping"))
     elseif (cmd == 'test') then
+        message("Quick Test")
         engage()
         is_facing_target()
         face_target()
@@ -203,8 +205,10 @@ windower.register_event('addon command', function(...)
         approach()
     elseif (T{'on','start','go'}:contains(cmd)) then 
         running = true
+        message("Starting")
     elseif (T{'off','stop','end'}:contains(cmd)) then
         running = false
+        message("Stopping")
     elseif (cmd == 'assist') then
         message("Setting assist target to "..proper_case(arg[2]))
         if (#arg < 2) then
@@ -218,18 +222,25 @@ windower.register_event('addon command', function(...)
         settings.assist_target = arg[2]
     elseif (cmd == 'engage') then
         settings.engage = not settings.engage
+        message("Will now "..(settings.engage and "engage" or "not engage"))
     elseif (cmd == 'approach') then
         settings.approach = not settings.approach
+        message("Will now "..(settings.engage and "approach" or "not approach"))
     elseif (cmd == 'range') then
         settings.max_range = tonumber(arg[2]) or 3.5
+        message("Will close to "..settings.max_range.."'")
     elseif (cmd == 'face') then
         settings.face_target = not settings.face_target
+        message("Will now "..(settings.engage and "" or "not").." face target")
     elseif (cmd == 'update') then
         settings.update_time = tonumber(arg[2]) or 2
+        message("Time between updates "..settings.update_time.." second(s)")
     elseif (cmd == 'debug') then
         settings.show_debug = not settings.show_debug
+        message("Debug info will be shown.")
     elseif (cmd == 'save') then
         settings:save()
+        message("Settings saved.")
     elseif (cmd == 'show') then
         for k,v in pairs(settings) do
             windower.add_to_chat(17, tostring(k)..": "..tostring(v))
