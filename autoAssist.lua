@@ -113,7 +113,8 @@ function face_target()
 end
 
 function is_in_range()
-    if (windower.ffxi.get_mob_by_target("t").distance:sqrt() > settings.max_range) then
+    local m = windower.ffxi.get_mob_by_target("t")
+    if (m and m.distance:sqrt() > settings.max_range) then
         message("Out of Range", true)
         return false
     end
