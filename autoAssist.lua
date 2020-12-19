@@ -76,7 +76,11 @@ function is_disabled()
 end
 
 function engage()
-    assist_target = windower.ffxi.get_mob_by_name(settings.assist_target)
+    if (settings.assist_target and settings.assist_target ~= '') then
+        assist_target = windower.ffxi.get_mob_by_name(settings.assist_target)
+    else
+        return
+    end
     if (assist_target and assist_target.status == 1) then
         windower.send_command("input /assist \""..settings.assist_target.."\"")
         if (settings.engage) then
@@ -93,7 +97,8 @@ function is_facing_target()
         return
     end
 
-    local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)
+    local player_body = windower.get_mob_by_id(player.id)
+    local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)
     message("Facing Target "..tostring(angle).." degrees", true)
 
     if (angle > 150 and angle < 180) then
@@ -111,7 +116,8 @@ function face_target()
         return
     end
 
-    local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)*-1
+    local player_body = windower.get_mob_by_id(player.id)
+    local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)*-1
     local rads = angle:radian()
     windower.ffxi.turn(rads)
 end
@@ -135,7 +141,8 @@ function approach(start)
             return
         end
     
-        local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)*-1
+        local player_body = windower.get_mob_by_id(player.id)
+        local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)*-1
         local rads = angle:radian()
 
         windower.ffxi.run(rads)
