@@ -90,14 +90,14 @@ function engage()
 end
 
 function is_facing_target()
-    if (not player) then
+    if (player == nil) then
         player = windower.ffxi.get_player()
     end
     if (not mob) then
         return
     end
 
-    local player_body = windower.get_mob_by_id(player.id)
+    local player_body = windower.ffxi.get_mob_by_id(player.id)
     local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)
     message("Facing Target "..tostring(angle).." degrees", true)
 
@@ -109,14 +109,14 @@ end
 
 function face_target()
     message("Turning to face Target", true)
-    if (not player) then
+    if (player == nil) then
         player = windower.ffxi.get_player()
     end
     if (not mob) then
         return
     end
 
-    local player_body = windower.get_mob_by_id(player.id)
+    local player_body = windower.ffxi.get_mob_by_id(player.id)
     local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)*-1
     local rads = angle:radian()
     windower.ffxi.turn(rads)
@@ -141,7 +141,7 @@ function approach(start)
             return
         end
     
-        local player_body = windower.get_mob_by_id(player.id)
+        local player_body = windower.ffxi.get_mob_by_id(player.id)
         local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)*-1
         local rads = angle:radian()
 
@@ -173,10 +173,9 @@ windower.register_event('prerender', function(...)
         return
     end
     next_check_time = time + settings.update_time
-    player = windower.ffxi.get_player()
-    mob = windower.ffxi.get_mob_by_target("t")
 
-    if (mob and ((mob.is_npc and not mob.charmed) or (mob.charmed and not mob.is_npcand)) and player.status == 1) then 
+    player = windower.ffxi.get_player()
+    if (mob and player.status == 1) then 
         if (not is_facing_target()) then
             face_target()
         end
@@ -216,6 +215,7 @@ windower.register_event('addon command', function(...)
         is_in_range()
         approach()
     elseif (T{'on','start','go'}:contains(cmd)) then 
+        player = windower.ffxi.get_player()
         running = true
         message("Starting")
     elseif (T{'off','stop','end'}:contains(cmd)) then
