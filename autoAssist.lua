@@ -19,6 +19,7 @@ defaults.engage = true
 local running = false
 local approaching = false
 local player = nil
+local assist_target = nil
 local mob = nil
 
 settings = config.load(defaults)
@@ -75,7 +76,8 @@ function is_disabled()
 end
 
 function engage()
-    if (settings.assist_target and windower.ffxi.get_mob_by_name(settings.assist_target)) then
+    assist_target = windower.ffxi.get_mob_by_name(settings.assist_target)
+    if (assist_target and assist_target.status == 1) then
         windower.send_command("input /assist \""..settings.assist_target.."\"")
         if (settings.engage) then
             windower.send_command("wait 1.25; input /attack on")
@@ -84,13 +86,14 @@ function engage()
 end
 
 function is_facing_target()
-	local self_vector = windower.ffxi.get_mob_by_index(player.index or 0)
-    local mob = windower.ffxi.get_mob_by_target("t")
+    if (not player) then
+        player = windower.ffxi.get_player()
+    end
     if (not mob) then
         return
     end
 
-    local angle = (math.atan2((mob.y - self_vector.y), (mob.x - self_vector.x))*180/math.pi)
+    local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)
     message("Facing Target "..tostring(angle).." degrees", true)
 
     if (angle > 150 and angle < 180) then
@@ -101,20 +104,23 @@ end
 
 function face_target()
     message("Turning to face Target", true)
-	local self_vector = windower.ffxi.get_mob_by_index(player.index or 0)
-    local mob = windower.ffxi.get_mob_by_target("t")
+    if (not player) then
+        player = windower.ffxi.get_player()
+    end
     if (not mob) then
         return
     end
 
-    local angle = (math.atan2((mob.y - self_vector.y), (mob.x - self_vector.x))*180/math.pi)*-1
+    local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)*-1
     local rads = angle:radian()
     windower.ffxi.turn(rads)
 end
 
 function is_in_range()
-    local m = windower.ffxi.get_mob_by_target("t")
-    if (m and m.distance:sqrt() > settings.max_range) then
+    if (not mob) then
+        return
+    end
+    if (mob and mob.distance:sqrt() > settings.max_range) then
         message("Out of Range", true)
         return false
     end
@@ -125,13 +131,11 @@ end
 function approach(start)
     if (start) then
         message("Approaching", true)
-        local self_vector = windower.ffxi.get_mob_by_index(windower.ffxi.get_player().index or 0)
-        local mob = windower.ffxi.get_mob_by_target("t")
         if (not mob) then
             return
         end
     
-        local angle = (math.atan2((mob.y - self_vector.y), (mob.x - self_vector.x))*180/math.pi)*-1
+        local angle = (math.atan2((mob.y - player.y), (mob.x - player.x))*180/math.pi)*-1
         local rads = angle:radian()
 
         windower.ffxi.run(rads)
@@ -165,7 +169,7 @@ windower.register_event('prerender', function(...)
     player = windower.ffxi.get_player()
     mob = windower.ffxi.get_mob_by_target("t")
 
-    if (mob and player.status == 1) then 
+    if (mob and ((mob.is_npc and not mob.charmed) or (mob.charmed and not mob.is_npcand)) and player.status == 1) then 
         if (not is_facing_target()) then
             face_target()
         end
