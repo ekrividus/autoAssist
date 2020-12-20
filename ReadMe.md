@@ -10,7 +10,9 @@ on or go or start: Will start autoAssist
 off or stop or end: Will stop autoAssist  
 assist: Sets the assist target, this needs to be the capitalized name of the player i.e. Ekrividus not ekrividus  
 engage: Sets whether or not to engage target after /assist  
-approach: Sets whether or not to approach a target, used with range to determine how close to get  
+approach: Sets whether or not to approach a target, used with range to determine how close to get 
+repostiion: Sets whether or not to return to start position after fights, position is set to player's position when starting AA or by using
+position: Sets the position to return to after a fight, this uses the position the player is standing at when used 
 range: Sets range to keep target at, melee range is generally 1~3.5 while max casting range is 21  
 face: Sets whether or not to automatically face target  
 update: Sets time between updates in seconds, 0.1 or 1 or 2.5 for instance  

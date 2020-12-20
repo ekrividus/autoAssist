@@ -15,12 +15,15 @@ defaults.face_target = true
 defaults.update_time = 2
 defaults.assist_target = nil
 defaults.engage = true
+defaults.reposition = true
 
 local running = false
 local approaching = false
-local player = nil
+local player = windower.ffxi.get_player()
+local player_body = windower.ffxi.get_mob_by_id(player.id)
 local assist_target = nil
 local mob = nil
+local start_position = {x=nil, y=nil}
 
 settings = config.load(defaults)
 
@@ -82,8 +85,14 @@ function engage()
         return
     end
     if (assist_target and assist_target.status == 1) then
+        mob = windower.ffxi.get_mob_by_index(assist_target.target_index)
+        if (not mob.claim_id or mob.claim_id == 0) then
+            return
+        end
         windower.send_command("input /assist \""..settings.assist_target.."\"")
         if (settings.engage) then
+            reposition(false)
+            approach(false)
             windower.send_command("wait 1.25; input /attack on")
         end
     end
@@ -161,11 +170,54 @@ function approach(start)
     end
 end
 
+function set_position()
+    player = windower.ffxi.get_player()
+    local player_body = windower.ffxi.get_mob_by_id(player.id)
+    start_position.x = player_body.x
+    start_position.y = player_body.y
+    message("Setting return position to "..start_position.x..", "..start_position.y)
+end
+
+function in_position()
+    local dist = ((start_position.x - player_body.x)^2 + (start_position.y - player_body.y)^2):sqrt()
+    if (dist <= 2) then
+        message("At start position", true)
+        reposition(false)
+        return true
+    end
+
+    return false
+end
+
+function reposition(start)
+    if (start) then
+        message("Returning to position.", true)
+        mob = windower.ffxi.get_mob_by_target("t")
+        if (not mob) then
+            return
+        end
+
+        local player_body = windower.ffxi.get_mob_by_id(player.id)
+        local angle = (math.atan2((start_position.y - player_body.y), (start_position.x - player_body.x))*180/math.pi)*-1
+        local rads = angle:radian()
+
+        windower.ffxi.run(rads)
+        returning = true
+    else
+        windower.ffxi.run(false)
+        returning = false
+    end
+end
+
 --[[ Windower Events ]]--
 windower.register_event('prerender', function(...)
     if (approaching) then
         if (is_in_range()) then
             approach(false)
+        end
+    elseif (returning) then
+        if (in_position()) then
+            reposition(false)
         end
     end
     if (not running) then
@@ -191,6 +243,8 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
+    elseif (not in_position()) then
+        reposition(true)
     end
 
     if (player.status == 0 and not is_disabled()) then
@@ -214,6 +268,9 @@ windower.register_event('addon command', function(...)
 
     if (cmd == nil or cmd == '') then
         running = not running
+        if (running) then
+            set_position()
+        end
         message((running and "Starting" or "Stopping"))
     elseif (cmd == 'test') then
         message("Quick Test")
@@ -224,22 +281,30 @@ windower.register_event('addon command', function(...)
         approach()
     elseif (T{'on','start','go'}:contains(cmd)) then 
         player = windower.ffxi.get_player()
+        set_position()
         running = true
         message("Starting")
     elseif (T{'off','stop','end'}:contains(cmd)) then
         running = false
         message("Stopping")
+    elseif (T{'reposition', 'reset', 'return'}:contains(cmd)) then
+        settings.reposition = not settings.reposition
+        message("Will "..(settings.reposition and "" or "not ").."reposition after mob death.")
+    elseif (T{'setposition', 'setpos', 'pos'}:contains(cmd)) then
+        set_position()
+        message("New return position set.")
     elseif (cmd == 'assist') then
-        message("Setting assist target to "..proper_case(arg[2]))
+        local person = proper_case(arg[2])
+        message("Setting assist target to "..person)
         if (#arg < 2) then
             message("You need to specify a player to assist.")
             return
         end
-        if (windower.ffxi.get_mob_by_name(arg[2]) == nil) then
+        if (windower.ffxi.get_mob_by_name(person) == nil) then
             message("You need to specify a valid player to assist.")
             return
         end
-        settings.assist_target = arg[2]
+        settings.assist_target = person
     elseif (cmd == 'engage') then
         settings.engage = not settings.engage
         message("Will now "..(settings.engage and "engage" or "not engage"))
