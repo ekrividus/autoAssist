@@ -33,10 +33,10 @@ function proper_case(s)
     return s:sub(1,1):upper()..s:sub(2)
 end
 
-function message(str, debug)
-    if (debug and debug == true) then
+function message(str, debug_msg)
+    if (debug_msg and debug_msg == true) then
         if (settings.show_debug and settings.show_debug == true) then
-            windower.add_to_chat(17, _addon.name.." (debug): "..str)
+            windower.add_to_chat(17, _addon.name.." (debug_msg): "..str)
         end
         return
     end
@@ -93,15 +93,17 @@ function is_facing_target()
     if (player == nil) then
         player = windower.ffxi.get_player()
     end
+    mob = windower.ffxi.get_mob_by_target("t")
     if (not mob) then
         return
     end
 
     local player_body = windower.ffxi.get_mob_by_id(player.id)
     local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)
-    message("Facing Target "..tostring(angle).." degrees", true)
+    local heading = player_body.heading*180/math.pi*-1
+    message("To face target: "..tostring(angle).." degrees".." current: "..heading, true)
 
-    if (angle > 150 and angle < 180) then
+    if (math.abs(math.abs(heading) - math.abs(angle)) < 15) then
         return true
     end
     return false
@@ -112,6 +114,7 @@ function face_target()
     if (player == nil) then
         player = windower.ffxi.get_player()
     end
+    mob = windower.ffxi.get_mob_by_target("t")
     if (not mob) then
         return
     end
@@ -123,10 +126,12 @@ function face_target()
 end
 
 function is_in_range()
+    mob = windower.ffxi.get_mob_by_target("t")
     if (not mob) then
         return
     end
-    if (mob and mob.distance:sqrt() > settings.max_range) then
+    local dist = mob.distance:sqrt() - (mob.model_size/2 + windower.ffxi.get_mob_by_id(player.id).model_size/2 - 1)
+    if (dist > settings.max_range) then
         message("Out of Range", true)
         return false
     end
@@ -137,6 +142,7 @@ end
 function approach(start)
     if (start) then
         message("Approaching", true)
+        mob = windower.ffxi.get_mob_by_target("t")
         if (not mob) then
             return
         end
@@ -148,9 +154,11 @@ function approach(start)
         windower.ffxi.run(rads)
         approaching = true
         return
+    else
+        message("Aproach done.", true)
+        windower.ffxi.run(false)
+        approaching = false
     end
-    windower.ffxi.run(false)
-    approaching = false
 end
 
 --[[ Windower Events ]]--
@@ -191,7 +199,7 @@ windower.register_event('prerender', function(...)
 end)
 
 -- Stop checking if logout happens
-windower.register_event('logout', function(...)
+windower.register_event('job change', 'zone change', 'logout', function(...)
 	windower.send_command('autoAssist off')
 	player = nil
 	return
@@ -249,7 +257,7 @@ windower.register_event('addon command', function(...)
         message("Time between updates "..settings.update_time.." second(s)")
     elseif (cmd == 'debug') then
         settings.show_debug = not settings.show_debug
-        message("Debug info will be shown.")
+        message("Debug info will"..(settings.show_debug and ' ' or ' not ').."be shown.")
     elseif (cmd == 'save') then
         settings:save()
         message("Settings saved.")
