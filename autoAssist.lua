@@ -118,10 +118,10 @@ function engage()
             return
         end
         windower.send_command("input /assist \""..settings.assist_target.."\"")
-        if (settings.engage) then
+        if (settings.engage and player.status == 0) then
             reposition(false)
             approach(false)
-            windower.send_command("wait 1.25; input /attack on")
+            windower.send_command("input /attack on")
         end
     end
 end
@@ -261,14 +261,14 @@ windower.register_event('prerender', function(...)
 
     player = windower.ffxi.get_player()
     if (mob and player.status == 1) then 
-        if (not is_facing_target()) then
+        if (not is_facing_target() and settings.face_target == true) then
             face_target()
         end
-        if (not is_in_range()) then
+        if (not is_in_range() and settings.approach == true) then
             approach(true)
         end
         return
-    elseif (not in_position()) then
+    elseif (not in_position() and settings.reposition == true) then
         reposition(true)
     end
 
