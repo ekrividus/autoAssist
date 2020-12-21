@@ -114,7 +114,7 @@ function engage()
     end
     if (assist_target and assist_target.status == 1) then
         mob = windower.ffxi.get_mob_by_index(assist_target.target_index)
-        if (not mob.claim_id or mob.claim_id == 0) then
+        if (not mob or not mob.claim_id or mob.claim_id == 0) then
             return
         end
         windower.send_command("input /assist \""..settings.assist_target.."\"")
@@ -207,12 +207,14 @@ function set_position()
 end
 
 function in_position()
-    local dist = ((start_position.x - player_body.x)^2 + (start_position.y - player_body.y)^2):sqrt()
+    local player_body = windower.ffxi.get_mob_by_id(player.id)
+    local dist = ((player_body.x - start_position.x)^2 + (player_body.y - start_position.y)^2):sqrt()
     if (dist <= 2) then
-        message("At start position", true)
+        message("At start position "..dist.."' away.", true)
         reposition(false)
         return true
     end
+    message(dist.."' from start position", true)
 
     return false
 end
@@ -220,11 +222,6 @@ end
 function reposition(start)
     if (start) then
         message("Returning to position.", true)
-        mob = windower.ffxi.get_mob_by_target("t")
-        if (not mob) then
-            return
-        end
-
         local player_body = windower.ffxi.get_mob_by_id(player.id)
         local angle = (math.atan2((start_position.y - player_body.y), (start_position.x - player_body.x))*180/math.pi)*-1
         local rads = angle:radian()
