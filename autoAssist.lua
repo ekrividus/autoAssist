@@ -207,7 +207,11 @@ function set_position()
 end
 
 function in_position()
+    player = windower.ffxi.get_player()
     local player_body = windower.ffxi.get_mob_by_id(player.id)
+    if (not player_body) then
+        return true
+    end
     local dist = ((player_body.x - start_position.x)^2 + (player_body.y - start_position.y)^2):sqrt()
     if (dist <= 2) then
         message("At start position "..dist.."' away.", true)
@@ -237,7 +241,7 @@ end
 --[[ Windower Events ]]--
 windower.register_event('prerender', function(...)
     if (approaching) then
-        if (is_in_range()) then
+        if (not mob or mob.hpp <= 0 or is_in_range()) then
             approach(false)
         end
     elseif (returning) then
