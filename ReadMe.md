@@ -23,3 +23,7 @@ Will return to starting position after kills, or the last position set.
 * debug : If you really want lots of chat spam info  
 
 ### Examples
+//autoassist assist Bojangles
+//autoassist range 2.5
+//aa update 0.5
+//aa engage
