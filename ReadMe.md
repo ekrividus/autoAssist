@@ -5,8 +5,12 @@ Auto /assist player selection is coming soon (tm)
 Should attempt to maintain a distance if approach is on and a range is set. 
 Will return to starting position after kills, or the last position set.
 
-## Commands:  
-//autoassist or //aa
+## Commands:
+```
+//autoassist [command] [option]
+or
+//aa [command] [option]
+```
 * With no command will toggle autoAssist on/off  
 * on or go or start : Will start autoAssist  
 * off or stop or end : Will stop autoAssist  
@@ -23,7 +27,9 @@ Will return to starting position after kills, or the last position set.
 * debug : If you really want lots of chat spam info  
 
 ### Examples
+```
 //autoassist assist Bojangles
 //autoassist range 2.5
 //aa update 0.5
 //aa engage
+```
