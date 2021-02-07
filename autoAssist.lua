@@ -339,13 +339,13 @@ windower.register_event('addon command', function(...)
         message("Will now "..(settings.engage and "engage" or "not engage"))
     elseif (cmd == 'approach') then
         settings.approach = not settings.approach
-        message("Will now "..(settings.engage and "approach" or "not approach"))
+        message("Will now "..(settings.approach and "approach" or "not approach"))
     elseif (cmd == 'range') then
         settings.max_range = tonumber(arg[2]) or 3.5
         message("Will close to "..settings.max_range.."'")
     elseif (cmd == 'face') then
         settings.face_target = not settings.face_target
-        message("Will now "..(settings.engage and "" or "not").." face target")
+        message("Will now "..(settings.face_target and "" or "not").." face target")
     elseif (cmd == 'update') then
         settings.update_time = tonumber(arg[2]) or 2
         message("Time between updates "..settings.update_time.." second(s)")
