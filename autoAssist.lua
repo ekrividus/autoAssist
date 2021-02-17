@@ -283,6 +283,7 @@ end)
 
 -- Stop checking if logout happens
 windower.register_event('job change', 'zone change', 'logout', function(...)
+    if (not running) then return false end
 	windower.send_command('autoAssist off')
 	player = nil
 	return
