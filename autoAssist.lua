@@ -114,11 +114,13 @@ function engage()
     end
     if (assist_target and assist_target.status == 1) then
         mob = windower.ffxi.get_mob_by_index(assist_target.target_index)
-        if (not mob or not mob.claim_id or mob.claim_id == 0) then
+        if (not mob) then -- or not mob.claim_id or mob.claim_id == 0) then
             return
         end
-        windower.send_command("input /assist \""..settings.assist_target.."\"")
-        if (settings.engage and player.status == 0) then
+        local tgt = windower.ffxi.get_mob_by_target('t')
+        if (not tgt or tgt.id ~= mob.id) then
+            windower.send_command("input /assist \""..settings.assist_target.."\"")
+        elseif (settings.engage and player.status == 0) then
             reposition(false)
             approach(false)
             windower.send_command("input /attack on")
@@ -169,7 +171,7 @@ function is_in_range()
     end
     local dist = mob.distance:sqrt() - (mob.model_size/2 + windower.ffxi.get_mob_by_id(player.id).model_size/2 - 1)
     if (dist > settings.max_range) then
-        message("Out of Range", true)
+        message("Out of Range: Max="..settings.max_range.." < Current="..dist.."", true)
         return false
     end
     message("In Range", true)
@@ -203,7 +205,7 @@ function set_position()
     local player_body = windower.ffxi.get_mob_by_id(player.id)
     start_position.x = player_body.x
     start_position.y = player_body.y
-    message("Setting return position to "..start_position.x..", "..start_position.y)
+    message("Setting return position to ("..start_position.x..", "..start_position.y..")", true)
 end
 
 function in_position()
