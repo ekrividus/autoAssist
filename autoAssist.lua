@@ -33,9 +33,9 @@ _addon.commands = {'autoAssist', 'aassist', 'aa'}
 _addon.lastUpdate = '12/11/2020'
 _addon.windower = '4'
 
-config = require('config')
+local config = require('config') 
 
-defaults = {}
+local defaults = {}
 defaults.show_debug = false
 defaults.approach = true
 defaults.max_range = 3.5
@@ -53,12 +53,11 @@ local assist_target = nil
 local mob = nil
 local start_position = {x=nil, y=nil}
 
-settings = config.load(defaults)
-
+local settings = config.load(defaults)
 settings.show_debug = true
 
-last_check_time = os.clock()
-next_check_time = 0
+local last_check_time = os.clock()
+local next_check_time = 0
 
 function proper_case(s)
     return s:sub(1,1):upper()..s:sub(2)
@@ -75,7 +74,7 @@ function message(str, debug_msg)
 end
 
 function buff_active(id)
-    if T(windower.ffxi.get_player().buffs):contains(BuffID) == true then
+    if T(windower.ffxi.get_player().buffs):contains(id) == true then
         return true
     end
     return false
