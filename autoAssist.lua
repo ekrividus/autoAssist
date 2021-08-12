@@ -66,11 +66,11 @@ end
 function message(str, debug_msg)
     if (debug_msg and debug_msg == true) then
         if (settings.show_debug and settings.show_debug == true) then
-            windower.add_to_chat(17, _addon.name.." (debug_msg): "..str)
+            windower.add_to_chat(207, _addon.name.." (debug_msg): "..str)
         end
         return
     end
-    windower.add_to_chat(17, _addon.name..": "..str)
+    windower.add_to_chat(207, _addon.name..": "..str)
 end
 
 function buff_active(id)
@@ -359,7 +359,7 @@ windower.register_event('addon command', function(...)
         message("Settings saved.")
     elseif (cmd == 'show') then
         for k,v in pairs(settings) do
-            windower.add_to_chat(17, tostring(k)..": "..tostring(v))
+            windower.add_to_chat(207, tostring(k)..": "..tostring(v))
         end
     end
 end)
