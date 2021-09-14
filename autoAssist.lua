@@ -44,6 +44,7 @@ defaults.update_time = 0.03
 defaults.assist_target = nil
 defaults.engage = true
 defaults.reposition = true
+defaults.use_fastfollow = false
 
 local running = false
 local approaching = false
@@ -180,6 +181,9 @@ end
 function approach(start)
     if (start) then
         message("Approaching", true)
+        if (settings.use_fastfollow == true) then
+            windower.send_command("ffo stop") -- Stop fastfollow if it's running
+        end
         mob = windower.ffxi.get_mob_by_target("t")
         if (not mob) then
             return
@@ -273,6 +277,8 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
+    elseif (settings.use_fastfollow == true) then
+        windower.send_command("ffo "..settings.assist_target)
     elseif (not in_position() and settings.reposition == true) then
         reposition(true)
     end
@@ -354,6 +360,9 @@ windower.register_event('addon command', function(...)
     elseif (cmd == 'debug') then
         settings.show_debug = not settings.show_debug
         message("Debug info will"..(settings.show_debug and ' ' or ' not ').."be shown.")
+    elseif (T{'fastfollow','follow','ffo'}:contains(cmd)) then
+        settings.use_fastfollow = not settings.use_fastfollow
+        message("Autoassist will "..(settings.use_fastfollow and 'follow ' or 'not follow ')..settings.assist_target..".")
     elseif (cmd == 'save') then
         settings:save()
         message("Settings saved.")
