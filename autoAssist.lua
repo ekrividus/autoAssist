@@ -53,6 +53,7 @@ local player_body = windower.ffxi.get_mob_by_id(player.id)
 local assist_target = nil
 local mob = nil
 local start_position = {x=nil, y=nil}
+local is_following = false
 
 local settings = config.load(defaults)
 settings.show_debug = true
@@ -120,6 +121,11 @@ function engage()
         local tgt = windower.ffxi.get_mob_by_target('t')
         if (not tgt or tgt.id ~= mob.id) then
             windower.send_command("input /assist \""..settings.assist_target.."\"")
+            if (settings.use_fastfollow == true) then
+                is_following = false
+                windower.send_command("ffo stop") -- Stop fastfollow if it's running
+            end
+    
         elseif (settings.engage and player.status == 0) then
             reposition(false)
             approach(false)
@@ -181,9 +187,6 @@ end
 function approach(start)
     if (start) then
         message("Approaching", true)
-        if (settings.use_fastfollow == true) then
-            windower.send_command("ffo stop") -- Stop fastfollow if it's running
-        end
         mob = windower.ffxi.get_mob_by_target("t")
         if (not mob) then
             return
@@ -277,8 +280,9 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
-    elseif (settings.use_fastfollow == true) then
+    elseif (not is_following and settings.use_fastfollow == true) then
         windower.send_command("ffo "..settings.assist_target)
+        is_following = true
     elseif (not in_position() and settings.reposition == true) then
         reposition(true)
     end
