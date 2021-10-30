@@ -45,6 +45,7 @@ defaults.assist_target = nil
 defaults.engage = true
 defaults.reposition = true
 defaults.use_fastfollow = false
+defaults.follow_target = ""
 
 local running = false
 local approaching = false
@@ -56,7 +57,7 @@ local start_position = {x=nil, y=nil}
 local is_following = false
 
 local settings = config.load(defaults)
-settings.show_debug = true
+settings.show_debug = false
 
 local last_check_time = os.clock()
 local next_check_time = 0
@@ -121,7 +122,7 @@ function engage()
         local tgt = windower.ffxi.get_mob_by_target('t')
         if (not tgt or tgt.id ~= mob.id) then
             windower.send_command("input /assist \""..settings.assist_target.."\"")
-            if (settings.use_fastfollow == true) then
+            if (settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
                 is_following = false
                 windower.send_command("ffo stop") -- Stop fastfollow if it's running
             end
@@ -280,8 +281,8 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
-    elseif (not is_following and settings.use_fastfollow == true) then
-        windower.send_command("ffo "..settings.assist_target)
+    elseif (not is_following and settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
+        windower.send_command("ffo "..settings.follow_target)
         is_following = true
     elseif (not in_position() and settings.reposition == true) then
         reposition(true)
@@ -364,9 +365,21 @@ windower.register_event('addon command', function(...)
     elseif (cmd == 'debug') then
         settings.show_debug = not settings.show_debug
         message("Debug info will"..(settings.show_debug and ' ' or ' not ').."be shown.")
-    elseif (T{'fastfollow','follow','ffo'}:contains(cmd)) then
+    elseif (T{'fastfollow','ffo'}:contains(cmd)) then
         settings.use_fastfollow = not settings.use_fastfollow
         message("Autoassist will "..(settings.use_fastfollow and 'follow ' or 'not follow ')..settings.assist_target..".")
+    elseif (T{'follow','ft'}:contains(cmd)) then
+        local person = proper_case(arg[2])
+        message("Setting follow target to "..tostring(person))
+        if (#arg < 2) then
+            message("You need to specify a player to follow.")
+            return
+        end
+        if (windower.ffxi.get_mob_by_name(person) == nil) then
+            message("You need to specify a valid player to follow.")
+            return
+        end
+        settings.follow_target = person
     elseif (cmd == 'save') then
         settings:save()
         message("Settings saved.")

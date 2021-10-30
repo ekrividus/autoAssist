@@ -18,7 +18,8 @@ or
 * `engage` : Sets whether or not to engage target after /assist  
 * `approach` : Sets whether or not to approach a target, used with range to determine how close to get 
 * `face` : Sets whether or not to automatically face target  
-* `ffo` or `follow`: will turn the fastfollow addon on/off using your assist target, this will cause it to follow between mobs
+* `fastfollow` or `ffo`: will turn the fastfollow addon on/off using your assist target, this will cause it to follow between mobs
+* `follow` or `ft`: will set the target to follow when using fast follow
 * `repostiion` or `return` : Sets whether or not to return to start position after fights, position is set to player's position when starting AA or by using
 * `position` : Sets the position to return to after a fight, this uses the position the player is standing at when used 
 * `range <number>` : Sets range to keep target at, melee range is generally 1~3.5 while max casting range is 21  
