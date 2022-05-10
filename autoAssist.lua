@@ -43,6 +43,7 @@ defaults.face_target = true
 defaults.update_time = 0.03
 defaults.assist_target = nil
 defaults.engage = true
+defaults.engage_delay = 1
 defaults.reposition = true
 defaults.use_fastfollow = false
 defaults.follow_target = ""
@@ -67,7 +68,7 @@ function proper_case(s)
 end
 
 function message(str, debug_msg)
-    if (debug_msg and debug_msg == true) then
+    if (debug_msg) then
         if (settings.show_debug and settings.show_debug == true) then
             windower.add_to_chat(207, _addon.name.." (debug_msg): "..str)
         end
@@ -110,6 +111,7 @@ end
 
 function engage()
     if (settings.assist_target and settings.assist_target ~= '') then
+        message(settings.assist_target, true)
         assist_target = windower.ffxi.get_mob_by_name(settings.assist_target)
     else
         return
@@ -119,18 +121,25 @@ function engage()
         if (not mob) then -- or not mob.claim_id or mob.claim_id == 0) then
             return
         end
+        -- Stop following our assist target before we engage
+        if (settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
+            is_following = false
+            windower.send_command("input //ffo stop") -- Stop fastfollow if it's running
+        end
+    
+        -- Assist our assist target and then engage
         local tgt = windower.ffxi.get_mob_by_target('t')
         if (not tgt or tgt.id ~= mob.id) then
             windower.send_command("input /assist \""..settings.assist_target.."\"")
-            if (settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
-                is_following = false
-                windower.send_command("ffo stop") -- Stop fastfollow if it's running
+            if (settings.engage and player.status == 0) then
+                reposition(false)
+                approach(false)
+                windower.send_command("wait "..(settings.engage_delay >= 1 and settings.engage_delay or 1)..";input /attack on")
             end
-    
         elseif (settings.engage and player.status == 0) then
             reposition(false)
             approach(false)
-            windower.send_command("input /attack on")
+            windower.send_command("wait "..(settings.engage_delay >= 0 and settings.engage_delay or 0)..";input /attack on")
         end
     end
 end
@@ -281,14 +290,12 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
-    elseif (not is_following and settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
-        windower.send_command("ffo "..settings.follow_target)
+    elseif (player.status ~= 1 and not is_following and settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
+        windower.send_command("input //ffo "..settings.follow_target)
         is_following = true
     elseif (not in_position() and settings.reposition == true) then
         reposition(true)
-    end
-
-    if (player.status == 0 and not is_disabled()) then
+    elseif (player.status == 0 and not is_disabled()) then
         engage()
     end
 end)
