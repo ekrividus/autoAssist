@@ -284,7 +284,7 @@ windower.register_event('prerender', function(...)
             approach(true)
         end
         return
-    elseif (assist.status == 1 and player.status == 0 and not is_disabled()) then
+    elseif (assist and assist.status == 1 and player.status == 0 and not is_disabled()) then
         engage()
     elseif (player.status ~= 1 and not is_following and settings.use_fastfollow == true and settings.follow_target and settings.follow_target ~= "") then
         message("Enabling Fastfollow!", true)
