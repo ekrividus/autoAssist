@@ -38,13 +38,13 @@ local config = require('config')
 local defaults = {}
 defaults.show_debug = false
 defaults.approach = true
-defaults.max_range = 3.5
+defaults.max_range = 3.0
 defaults.face_target = true
 defaults.update_time = 0.25
-defaults.assist_target = nil
+defaults.assist_target = ""
 defaults.engage = true
-defaults.engage_delay = 1
-defaults.reposition = true
+defaults.engage_delay = 2
+defaults.reposition = false
 defaults.use_fastfollow = false
 defaults.follow_target = ""
 
@@ -353,24 +353,27 @@ windower.register_event('addon command', function(...)
     elseif (cmd == 'engage') then
         settings.engage = not settings.engage
         message("Will now "..(settings.engage and "engage" or "not engage"))
+    elseif (cmd == 'delay' or cmd == 'ed') then
+        settings.engage_delay = tonumber(arg[2]) and tonumber(arg[2]) or 1
+        message("Engage delay set to "..settings.engage_delay.." seconds")
     elseif (cmd == 'approach') then
         settings.approach = not settings.approach
-        message("Will now "..(settings.approach and "approach" or "not approach"))
+        message("Will "..(settings.approach and "approach" or "not approach"))
     elseif (cmd == 'range') then
         settings.max_range = tonumber(arg[2]) or 3.5
         message("Will close to "..settings.max_range.."'")
     elseif (cmd == 'face') then
         settings.face_target = not settings.face_target
-        message("Will now "..(settings.face_target and "" or "not").." face target")
+        message("Will "..(settings.face_target and "face target" or "not face target"))
     elseif (cmd == 'update') then
         settings.update_time = tonumber(arg[2]) or 2
         message("Time between updates "..settings.update_time.." second(s)")
     elseif (cmd == 'debug') then
         settings.show_debug = not settings.show_debug
-        message("Debug info will"..(settings.show_debug and ' ' or ' not ').."be shown.")
+        message("Debug info will "..(settings.show_debug and 'be shown' or 'not be shown'))
     elseif (T{'fastfollow','ffo'}:contains(cmd)) then
         settings.use_fastfollow = not settings.use_fastfollow
-        message("Autoassist will "..(settings.use_fastfollow and 'follow ' or 'not follow ')..settings.assist_target..".")
+        message("Autoassist will "..(settings.use_fastfollow and 'follow ' or 'not follow ')..settings.follow_target..".")
     elseif (T{'follow','ft'}:contains(cmd)) then
         local person = proper_case(arg[2])
         message("Setting follow target to "..tostring(person))
