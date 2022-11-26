@@ -38,6 +38,8 @@ local config = require('config')
 local defaults = {}
 defaults.show_debug = false
 defaults.approach = true
+defaults.retreat = true
+defaults.min_range = 1.0
 defaults.max_range = 3.0
 defaults.face_target = true
 defaults.update_time = 0.25
@@ -49,7 +51,10 @@ defaults.use_fastfollow = false
 defaults.follow_target = ""
 
 local running = false
+
 local approaching = false
+local retreating = false
+
 local player = windower.ffxi.get_player()
 local player_body = windower.ffxi.get_mob_by_id(player.id)
 local mob = nil
@@ -58,6 +63,7 @@ local is_following = false
 
 local settings = config.load(defaults)
 settings.show_debug = false
+settings.min_range = settings.min_range or 1.0
 
 local last_check_time = os.clock()
 local next_check_time = 0
@@ -176,20 +182,26 @@ end
 function is_in_range()
     mob = windower.ffxi.get_mob_by_target("t")
     if (not mob) then
-        return
+        return nil
     end
     local dist = mob.distance:sqrt() - (mob.model_size/2 + windower.ffxi.get_mob_by_id(player.id).model_size/2 - 1)
     if (dist > settings.max_range) then
-        return false
+        return "approach"
+    elseif (dist < settings.min_range) then
+        return "retreat"
     end
-    return true
+    return nil
 end
 
 function approach(start)
     if (start) then
+        retreat(false)
         message("Approaching", true)
         mob = windower.ffxi.get_mob_by_target("t")
+
         if (not mob) then
+            windower.ffxi.run(false)
+            approaching = false
             return
         end
     
@@ -203,6 +215,31 @@ function approach(start)
     else
         windower.ffxi.run(false)
         approaching = false
+    end
+end
+
+function retreat(start)
+    if (start) then
+        message("Retreating", true)
+        approach(false)
+        mob = windower.ffxi.get_mob_by_target("t")
+
+        if (not mob) then
+            windower.ffxi.run(false)
+            retreating = false
+            return
+        end
+    
+        local player_body = windower.ffxi.get_mob_by_id(player.id)
+        local angle = (math.atan2((mob.y - player_body.y), (mob.x - player_body.x))*180/math.pi)
+        local rads = angle:radian()
+
+        windower.ffxi.run(rads)
+        retreating = true
+        return
+    else
+        windower.ffxi.run(false)
+        retreating = false
     end
 end
 
@@ -245,8 +282,12 @@ end
 --[[ Windower Events ]]--
 windower.register_event('prerender', function(...)
     if (approaching) then
-        if (not mob or mob.hpp <= 0 or is_in_range()) then
+        if (not mob or mob.hpp <= 0 or is_in_range() ~= 'approach') then
             approach(false)
+        end
+    elseif (retreating) then
+        if (not mob or mob.hpp <= 0 or is_in_range() ~= 'retreat') then
+            retreat(false)
         end
     elseif (returning) then
         if (in_position()) then
@@ -280,8 +321,11 @@ windower.register_event('prerender', function(...)
         if (not is_facing_target() and settings.face_target == true) then
             face_target()
         end
-        if (not is_in_range() and settings.approach == true) then
+        local should_move = is_in_range()
+        if (should_move == "approach" and settings.approach == true) then
             approach(true)
+        elseif (should_move == "retreat" and settings.retreat == true) then
+            retreat(true)
         end
         return
     elseif (assist and assist.status == 1 and player.status == 0 and not is_disabled()) then
@@ -291,7 +335,7 @@ windower.register_event('prerender', function(...)
         windower.send_command("ffo "..settings.follow_target)
         --windower.chat.input("//ffo "..settings.follow_target)
         is_following = true
-    elseif (player.status == 0 and not is_disabled() and not is_following and not in_position() and settings.reposition == true) then
+    elseif (player.status == 0 and not is_disabled() and not settings.use_fastfollow and not in_position() and settings.reposition == true) then
         reposition(true)
     end
 end)
@@ -335,7 +379,7 @@ windower.register_event('addon command', function(...)
     elseif (T{'reposition', 'reset', 'return'}:contains(cmd)) then
         settings.reposition = not settings.reposition
         message("Will "..(settings.reposition and "" or "not ").."reposition after mob death.")
-    elseif (T{'setposition', 'setpos', 'pos'}:contains(cmd)) then
+    elseif (T{'setposition', 'setpos', 'position', 'pos'}:contains(cmd)) then
         set_position()
         message("New return position set.")
     elseif (cmd == 'assist') then
